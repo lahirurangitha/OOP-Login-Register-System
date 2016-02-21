@@ -18,8 +18,8 @@ class Validation {
     public function check($source,$items = array()){
         foreach($items as $item => $rules){
             foreach($rules as $rule => $rule_value){
-                $value = $source[$item];
-
+                $value = trim($source[$item]);
+                $item = escape($item);
                 if($rule === 'required' && empty($value)){
                     $this->addError("{$item} is required.");
                 }else if(!empty($value)){
@@ -36,12 +36,15 @@ class Validation {
                             break;
                         case 'matches':
                             if($value != $source[$rule_value]){
-                                $this->addError("{$rule_value} must match {$item}");
+                                $this->addError("{$rule_value} must match {$item}.");
                             }
                             break;
                         case 'unique':
-                            break;
-                        default:
+                            //$item will be a field name in the table.. $value is its value
+                            $check = $this->_db->get($rule_value,array($item,'=',$value));
+                            if($check->count()){
+                                $this->addError("{$item} already exists.");
+                            }
                             break;
                     }
                 }

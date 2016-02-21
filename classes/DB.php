@@ -42,6 +42,7 @@ class DB {
                 $this->_results = $this->_query->fetchAll(PDO::FETCH_OBJ);
                 $this->_count = $this->_query->rowCount();
             } else {
+//                echo 'query not executed......';
                 $this->_error = true;
             }
         }
@@ -63,6 +64,25 @@ class DB {
                     return $this;
                 }
             }
+        }
+        return false;
+    }
+
+    public function insert($table, $fields = array()) {
+        $keys = array_keys($fields);
+        $values = '';
+        $x = 1;
+
+        foreach ($fields as $field) {
+            $values .= '?';
+            if ($x < count($fields)) {
+                $values .= ', ';
+            }
+            $x++;
+        }
+        $sql = "INSERT INTO {$table} (`" . implode('`, `', $keys) . "`) VALUES ({$values})";
+        if (!$this->query($sql, $fields)->error()) {
+            return true;
         }
         return false;
     }

@@ -9,35 +9,36 @@
 require_once 'core/init.php';
 
 if(Input::exists()){
-    $validate = new Validation();
-    $validation = $validate->check($_POST,array(
-        'email' => array(
-            'required' =>true
-        ),
-        'password' => array(
-            'required' => true
-        )
-    ));
-    if($validation->passed()){
-        echo 'here';
-    }else{
-        $str = "";
-        foreach ($validate->errors() as $error) {
-            $str .= $error;
-            $str .= '\n';
+    if(Token::check(Input::get('token'))) {
+        $validate = new Validation();
+        $validation = $validate->check($_POST, array(
+            'email' => array(
+                'required' => true
+            ),
+            'password' => array(
+                'required' => true
+            )
+        ));
+        if ($validation->passed()) {
+            //login user
+            $email = $_POST['email'];
+            $password = $_POST['password'];
+            $loginCheck = DB::getInstance();
+            $loginCheck->query('SELECT * FROM user_detail WHERE email = ? AND Password = ?', array($email, $password));
+            if ($loginCheck->count()) {
+                echo 'User exists.';
+            } else {
+                echo 'Credentials does not match.';
+            }
+            //
+        } else {
+            $str = "";
+            foreach ($validate->errors() as $error) {
+                $str .= $error;
+                $str .= '\n';
+            }
+            echo '<script type="text/javascript">alert("' . $str . '")</script>';
         }
-        echo '<script type="text/javascript">alert("' . $str . '")</script>';
-    }
-    if(isset($_POST['email']) && isset($_POST['password'])){
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-    }
-    $loginCheck = DB::getInstance();
-    $loginCheck->query('SELECT * FROM user_detail WHERE Email_address = ? AND Password = ?',array($email,$password));
-    if($loginCheck->count()){
-        echo 'exists';
-    }else{
-        echo 'not exists';
     }
 }
 ?>
@@ -54,5 +55,6 @@ if(Input::exists()){
         <label>Password</label><br>
         <input type="password" name="password" placeholder="Enter password">
     </div>
+    <input type="hidden" name="token" value="<?php echo Token::generate();?>">
     <input type="submit" value="Sign In">
 </form>
